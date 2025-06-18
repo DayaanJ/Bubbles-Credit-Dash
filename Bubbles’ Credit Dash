@@ -42,3 +42,112 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="bubbles"></div>
+        <div id="score">Score: 0</div>
+        <div id="consent-popup">
+            <h3>Welcome to Credit Hero!</h3>
+            <p>By playing, you agree to receive financial tips</p>
+            <button id="agree-btn">I AGREE</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let gameSpeed = 5;
+        let isJumping = false;
+        let gameStarted = false;
+        const bubbles = document.getElementById('bubbles');
+        const scoreDisplay = document.getElementById('score');
+        const consentPopup = document.getElementById('consent-popup');
+        const agreeBtn = document.getElementById('agree-btn');
+        const obstacles = [];
+
+        // Start game when user agrees
+        agreeBtn.addEventListener('click', () => {
+            consentPopup.style.display = 'none';
+            gameStarted = true;
+            setInterval(createObstacle, 2000);
+            setInterval(updateGame, 20);
+        });
+
+        // Jump when spacebar is pressed
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !isJumping && gameStarted) {
+                jump();
+            }
+        });
+
+        function jump() {
+            isJumping = true;
+            let jumpHeight = 0;
+            const jumpInterval = setInterval(() => {
+                jumpHeight += 5;
+                bubbles.style.bottom = (100 + jumpHeight) + 'px';
+                
+                if (jumpHeight > 100) {
+                    clearInterval(jumpInterval);
+                    const fallInterval = setInterval(() => {
+                        jumpHeight -= 5;
+                        bubbles.style.bottom = (100 + jumpHeight) + 'px';
+                        
+                        if (jumpHeight <= 0) {
+                            clearInterval(fallInterval);
+                            isJumping = false;
+                        }
+                    }, 20);
+                }
+            }, 20);
+        }
+
+        function createObstacle() {
+            if (!gameStarted) return;
+            
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.style.right = '0px';
+            document.getElementById('game-container').appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        function updateGame() {
+            if (!gameStarted) return;
+            
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+            
+            // Move obstacles
+            obstacles.forEach((obstacle, index) => {
+                const currentRight = parseInt(obstacle.style.right || '0');
+                obstacle.style.right = (currentRight + gameSpeed) + 'px';
+                
+                // Detect collision
+                if (currentRight > window.innerWidth - 150 && currentRight < window.innerWidth - 50 &&
+                    parseInt(bubbles.style.bottom || '100') < 140) {
+                    alert(`Game Over! Score: ${score}`);
+                    location.reload();
+                }
+                
+                // Remove off-screen obstacles
+                if (currentRight > window.innerWidth) {
+                    obstacle.remove();
+                    obstacles.splice(index, 1);
+                }
+            });
+            
+            // Increase difficulty
+            if (score % 100 === 0) {
+                gameSpeed += 0.5;
+            }
+        }
+    </script>
+</body>
+</html>
